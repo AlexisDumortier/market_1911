@@ -1,44 +1,42 @@
 class Market
-
   attr_reader :name, :vendors
 
-  def initialize(name) 
-    @name = name 
+  def initialize(name)
+    @name = name
     @vendors = []
-  end 
+  end
 
   def add_vendor(vendor)
     @vendors << vendor
   end
-  
+
   def vendor_names
-    @vendors.map { |vendor| vendor.name}
+    @vendors.map(&:name)
   end
 
   def vendors_that_sell(item)
-    @vendors.find_all { |vendor| vendor.inventory.include? item}
+    @vendors.find_all { |vendor| vendor.inventory.include? item }
   end
 
   def item_list
-    @vendors.reduce([]) do |result, vendor| 
-      item_in_stock = vendor.inventory.find_all { |item, quantity| quantity != 0 }
-      result << item_in_stock.map {|item| item[0].name}
+    @vendors.reduce([]) do |result, vendor|
+      item_in_stock = vendor.inventory.find_all { |_item, quantity| quantity != 0 }
+      result << item_in_stock.map { |item, _quantity| item.name }
     end.flatten.uniq
   end
 
   def sorted_item_list
-    item_list.sort_by {|item| item}
+    item_list.sort
   end
 
   def total_inventory
-    @vendors.reduce(Hash.new(0)) do |result, vendor|
-      vendor.inventory.each { |item, quantity| result[item] += quantity}
-      result
+    @vendors.each_with_object(Hash.new(0)) do |vendor, result|
+      vendor.inventory.each { |item, quantity| result[item] += quantity }
     end
   end
 
   def sell(item, quantity)
-    if (total_inventory[item] >= quantity)
+    if total_inventory[item] >= quantity
       reduce_stock(item, quantity)
       true
     else
@@ -53,10 +51,9 @@ class Market
         vendor.inventory[item] -= quantity - quantity_sold
         break
       else
-        quantity_sold += vendor.inventory[item] 
+        quantity_sold += vendor.inventory[item]
         vendor.inventory[item] = 0
       end
     end
   end
-
 end
